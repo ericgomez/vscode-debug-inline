@@ -1,84 +1,59 @@
 import * as vscode from 'vscode';
-import { MethodAnalyzer } from './MethodAnalyzer';
+import { DebugStackFrameInternal } from '../interfaces/DebugTypes';
+import { FunctionAnalyzer } from './FunctionAnalyzer';
 
 export class ExecutedLinesTracker {
     private executedLines: Map<string, Set<number>> = new Map();
-    private lastSessionId: string | undefined;
-    private lastStopLine: number | undefined;
-    private lastStopFile: string | undefined;
-    private methodAnalyzer: MethodAnalyzer;
+    private functionAnalyzer: FunctionAnalyzer;
 
     constructor() {
-        this.methodAnalyzer = new MethodAnalyzer();
+        this.functionAnalyzer = new FunctionAnalyzer();
     }
 
     async updateExecutedLines(session: vscode.DebugSession, document: vscode.TextDocument) {
         try {
-            if (this.lastSessionId !== session.id) {
-                this.executedLines.clear();
-                this.lastSessionId = session.id;
-                this.lastStopLine = undefined;
-                this.lastStopFile = undefined;
-            }
-
             const threads = await session.customRequest('threads');
-            if (!threads || !threads.threads || threads.threads.length === 0) {
+            if (!threads?.threads?.length) {
                 return;
             }
 
             const threadId = threads.threads[0].id;
-
             const stackTrace = await session.customRequest('stackTrace', {
                 threadId: threadId,
                 startFrame: 0,
-                levels: 20,
-                format: {
-                    parameters: true,
-                    parameterTypes: true,
-                    parameterNames: true,
-                    line: true,
-                    module: true
-                }
+                levels: 20
             });
 
-            let currentMethodFrame = null;
-            for (const frame of stackTrace.stackFrames) {
-                if (frame.source && frame.source.path === document.uri.fsPath) {
-                    currentMethodFrame = frame;
-                    break;
-                }
+            if (!stackTrace?.stackFrames?.length) {
+                return;
             }
 
-            if (currentMethodFrame) {
-                const currentLine = currentMethodFrame.line - 1;
+            const currentFrame = (stackTrace.stackFrames as DebugStackFrameInternal[]).find(
+                frame => frame.source?.path === document.uri.fsPath
+            );
+
+            if (currentFrame) {
+                const currentLine = currentFrame.line - 1;
                 const currentFile = document.uri.fsPath;
 
-                if (this.lastStopLine !== currentLine || this.lastStopFile !== currentFile) {
-                    this.executedLines.clear();
-                    this.lastStopLine = currentLine;
-                    this.lastStopFile = currentFile;
-                }
-
-                const methodStartLine = this.methodAnalyzer.findMethodStartLine(document, currentLine);
-
+                this.executedLines.clear();
+                
                 let fileLines = this.executedLines.get(currentFile);
                 if (!fileLines) {
                     fileLines = new Set<number>();
                     this.executedLines.set(currentFile, fileLines);
                 }
 
-                for (let line = methodStartLine; line < currentLine; line++) {
-                    fileLines.add(line);
-                }
+                const functionStartLine = this.functionAnalyzer.findFunctionStartLine(document, currentLine);
 
-                for (let i = 1; i < stackTrace.stackFrames.length; i++) {
-                    const frame = stackTrace.stackFrames[i];
-                    if (frame.source && frame.source.path === currentFile) {
-                        const frameLine = frame.line - 1;
-                        if (frameLine < currentLine) {
-                            fileLines.add(frameLine);
-                        }
+                for (let line = functionStartLine; line < currentLine; line++) {
+                    const lineText = document.lineAt(line).text.trim();
+                    
+                    if (this.functionAnalyzer.isCommentOrEmptyLine(lineText)) {
+                        continue;
                     }
+                    
+                    fileLines.add(line);
                 }
             }
         } catch (error) {

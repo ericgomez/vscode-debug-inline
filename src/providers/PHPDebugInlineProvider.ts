@@ -1,17 +1,14 @@
 import * as vscode from 'vscode';
 import { ValueFormatter } from '../utils/ValueFormatter';
-import { MethodAnalyzer } from '../utils/MethodAnalyzer';
 import { ExecutedLinesTracker } from '../utils/ExecutedLinesTracker';
 
 export class PHPDebugInlineProvider implements vscode.InlineValuesProvider {
     private executedLinesTracker: ExecutedLinesTracker;
     private valueFormatter: ValueFormatter;
-    private methodAnalyzer: MethodAnalyzer;
 
     constructor() {
         this.executedLinesTracker = new ExecutedLinesTracker();
         this.valueFormatter = new ValueFormatter();
-        this.methodAnalyzer = new MethodAnalyzer();
     }
 
     async provideInlineValues(
