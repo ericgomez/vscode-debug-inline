@@ -7,8 +7,3 @@ export interface DebugStackFrameInternal {
     };
     line: number;
 }
-
-export interface IFunctionAnalyzer {
-    findFunctionStartLine(document: vscode.TextDocument, currentLine: number): number;
-    isCommentOrEmptyLine(lineText: string): boolean;
-}

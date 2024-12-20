@@ -1,14 +1,8 @@
 import * as vscode from 'vscode';
 import { DebugStackFrameInternal } from '../interfaces/DebugTypes';
-import { FunctionAnalyzer } from './FunctionAnalyzer';
 
 export class ExecutedLinesTracker {
     private executedLines: Map<string, Set<number>> = new Map();
-    private functionAnalyzer: FunctionAnalyzer;
-
-    constructor() {
-        this.functionAnalyzer = new FunctionAnalyzer();
-    }
 
     async updateExecutedLines(session: vscode.DebugSession, document: vscode.TextDocument) {
         try {
@@ -43,19 +37,11 @@ export class ExecutedLinesTracker {
                     fileLines = new Set<number>();
                     this.executedLines.set(currentFile, fileLines);
                 }
-
-                const functionStartLine = this.functionAnalyzer.findFunctionStartLine(document, currentLine);
-
-                for (let line = functionStartLine; line < currentLine; line++) {
-                    const lineText = document.lineAt(line).text.trim();
-                    
-                    if (this.functionAnalyzer.isCommentOrEmptyLine(lineText)) {
-                        continue;
+                        
+                for (let line = 0; line < currentLine; line++) {
+                        fileLines.add(line);
                     }
-                    
-                    fileLines.add(line);
                 }
-            }
         } catch (error) {
             console.error('Error updating executed lines:', error);
         }

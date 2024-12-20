@@ -16,10 +16,6 @@ export class PHPDebugInlineProvider implements vscode.InlineValuesProvider {
         viewPort: vscode.Range,
         context: vscode.InlineValueContext
     ): Promise<vscode.InlineValue[]> {
-        if (document.uri.fsPath.includes('/vendor/') || document.uri.fsPath.includes('\\vendor\\')) {
-            return [];
-        }
-
         const session = vscode.debug.activeDebugSession;
         if (!session || session.type !== 'php') {
             return [];
@@ -56,7 +52,7 @@ export class PHPDebugInlineProvider implements vscode.InlineValuesProvider {
                         const variable = response.variables.find((v: any) => v.name === varName);
 
                         if (variable) {
-                            if (varName === '$this') {
+                            if (varName === '$this' || variable.value === 'uninitialized') {
                                 continue;
                             }
 

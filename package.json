@@ -4,7 +4,7 @@
   "description": "Shows PHP variable values inline during debugging.",
   "icon": "images/logo.png",
   "publisher": "ericgomez",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
