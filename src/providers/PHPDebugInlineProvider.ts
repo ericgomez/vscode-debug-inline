@@ -56,7 +56,7 @@ export class PHPDebugInlineProvider implements vscode.InlineValuesProvider {
                                 continue;
                             }
 
-                            const formattedValue = this.valueFormatter.formatValue(variable);
+                            const formattedValue = await this.valueFormatter.formatValue(variable, session);
                             
                             const columnStart = match.index!;
                             const columnEnd = columnStart + varName.length;
