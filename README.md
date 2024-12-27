@@ -23,6 +23,17 @@ A VS Code extension that enhances your debugging experience by showing variable 
 3. Search for **PHP Debug Inline**.
 4. Click "Install."
 
+### Color Customization
+
+You can customize the colors of the inline debug values by adding the following configuration to your VS Code `settings.json`:
+
+```json
+"workbench.colorCustomizations": {
+    "editor.inlineValuesForeground": "#666D75",
+    "editor.inlineValuesBackground": "#00000000"
+}
+```
+
 ### Feedback
 
 Your feedback is invaluable! If you encounter any issues or have suggestions for improvements, please [report them](https://github.com/ericgomez/vscode-php-debug-inline/issues) here.

@@ -17,7 +17,7 @@ export class PHPDebugInlineProvider implements vscode.InlineValuesProvider {
         context: vscode.InlineValueContext
     ): Promise<vscode.InlineValue[]> {
         const session = vscode.debug.activeDebugSession;
-        if (!session || session.type !== 'php') {
+        if (!session || !['php', 'php-inline-debug'].includes(session.type)) {
             return [];
         }
 
