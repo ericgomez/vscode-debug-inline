@@ -1,14 +1,17 @@
 import * as vscode from 'vscode';
 import { ValueFormatter } from '../utils/ValueFormatter';
 import { ExecutedLinesTracker } from '../utils/ExecutedLinesTracker';
+import { ThisAnalyzer } from '../utils/ThisAnalyzer';
 
 export class PHPDebugInlineProvider implements vscode.InlineValuesProvider {
     private executedLinesTracker: ExecutedLinesTracker;
     private valueFormatter: ValueFormatter;
+    private thisAnalyzer: ThisAnalyzer;
 
     constructor() {
-        this.executedLinesTracker = new ExecutedLinesTracker();
         this.valueFormatter = new ValueFormatter();
+        this.executedLinesTracker = new ExecutedLinesTracker();
+        this.thisAnalyzer = new ThisAnalyzer(this.valueFormatter);
     }
 
     async provideInlineValues(
@@ -52,7 +55,18 @@ export class PHPDebugInlineProvider implements vscode.InlineValuesProvider {
                         const variable = response.variables.find((v: any) => v.name === varName);
 
                         if (variable) {
-                            if (varName === '$this' || variable.value === 'uninitialized') {
+                            if (variable.value === 'uninitialized') {
+                                continue;
+                            }
+
+                            if (varName === '$this') {
+                                const thisValues = await this.thisAnalyzer.analyzeThisProperties(
+                                    session,
+                                    variable,
+                                    text,
+                                    lineNum
+                                );
+                                variables.push(...thisValues);
                                 continue;
                             }
 
